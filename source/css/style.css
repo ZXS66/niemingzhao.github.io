@@ -719,7 +719,8 @@ img.avatar-animation:hover {
 }
 
 .mdui-theme-accent-pink .search-result-title:hover,
-.mdui-theme-accent-pink .search-result-title:focus {
+.mdui-theme-accent-pink .search-result-title:focus,
+.mdui-theme-accent-pink .search-result-list>li.active a {
   color: #ff4081 !important;
 }
 
@@ -743,7 +744,7 @@ img.avatar-animation:hover {
   color: #ff0 !important;
 }
 
-.search-result-title:before {
+.search-result-list li.active .search-result-title:before {
   content: '\261b\20';
 }
 
@@ -1295,5 +1296,56 @@ img.avatar-animation:hover {
     animation: unset !important;
     -webkit-transition: none !important;
     transition: none !important;
+  }
+}
+
+
+/** custom style */
+/** copy btn style*/
+.btn-copy {
+  cursor: copy;
+  font-size: small;
+}
+
+.btn-copy.shining,
+.source-clipboard .msg.shining {
+  animation-name: shining;
+  animation-duration: 4.096s;
+  animation-iteration-count: 1;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: forwards;
+  animation-direction: alternative;
+}
+
+.source-clipboard {
+  border-top: 1px solid gray;
+  padding: 0 1em;
+}
+
+@keyframes shining {
+  0% {
+    opacity: 1;
+  }
+
+  10% {
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+    color: green;
+  }
+
+  80% {
+    opacity: 1;
+    color: green;
+  }
+
+  90% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
   }
 }

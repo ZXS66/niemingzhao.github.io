@@ -36,7 +36,7 @@
         <% } %>
       </div>
     </div>
-    <div class="mdui-collapse-item">
+    <!-- <div class="mdui-collapse-item">
       <script>var a=localStorage.getItem("mdui-collapse-item-1");if(a){document.getElementsByClassName("mdui-collapse-item")[1].className+=" mdui-collapse-item-open"};</script>
       <div class="mdui-collapse-item-header mdui-list-item mdui-ripple">
         <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-green">class</i>
@@ -50,22 +50,26 @@
           <a href="javascript:;" class="mdui-list-item mdui-p-l-2 mdui-text-color-theme mdui-ripple" style="justify-content: center;"><%= __('no_category') %></a>
         <% } %>
       </div>
-    </div>
+    </div> -->
     <div class="mdui-collapse-item">
-      <script>var a=localStorage.getItem("mdui-collapse-item-2");if(a){document.getElementsByClassName("mdui-collapse-item")[2].className+=" mdui-collapse-item-open"};</script>
+      <script>var a=localStorage.getItem("mdui-collapse-item-1");if(a){document.getElementsByClassName("mdui-collapse-item")[1].className+=" mdui-collapse-item-open"};</script>
       <div class="mdui-collapse-item-header mdui-list-item mdui-ripple">
         <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-brown">bookmark</i>
         <div class="mdui-list-item-content"><%= __('tag') %></div>
         <i class="mdui-collapse-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
       </div>
       <div class="mdui-collapse-item-body mdui-list mdui-list-dense">
-        <% var tags = list_tags({style: 'none', separator: '', class: {a: 'mdui-ripple sidebar_archives-link', count: 'mdui-ripple sidebar_archives-count'}}) %>
+        <% var tags = list_tags({style: 'none', separator: '', class: 'mdui-ripple sidebar_archives'}) %>
         <%- tags %>
         <% if (!tags) { %>
           <a href="javascript:;" class="mdui-list-item mdui-p-l-2 mdui-text-color-theme mdui-ripple" style="justify-content: center;"><%= __('no_tag') %></a>
         <% } %>
       </div>
     </div>
+    <a href="<%- url_for('/app') %>" class="mdui-list-item mdui-ripple">
+      <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-red">favorite</i>
+      <div class="mdui-list-item-content"><%= __('app') %></div>
+    </a>
     <a href="<%- url_for('/about') %>" class="mdui-list-item mdui-ripple">
       <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-purple">person</i>
       <div class="mdui-list-item-content"><%= __('about') %></div>

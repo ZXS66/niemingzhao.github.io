@@ -2,6 +2,7 @@ home: Home
 archive: Archive
 category: Category
 tag: Tag
+app: App
 about: About
 links: Links
 rss_feed: RSS
@@ -22,4 +23,6 @@ share:
   linkedin: Share to LinkedIn
   qq: Share to QQ
   telegram: Share to Telegram
+  qrcode: QR Code
 donate: Donate
+click2copy: Click to Copy

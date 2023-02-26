@@ -108,96 +108,11 @@ $$(function () {
   });
 });
 
-/* Search */
-var searchFunc = function (path, search_id, content_id) {
-  $$.ajax({
-    url: path,
-    dataType: 'xml',
-    success: function (xmlResponse) {
-      var datas = $$(xmlResponse).map(function () {
-        return this.tagName === 'SEARCH' ? this : null;
-      }).find('entry').map(function () {
-        return {
-          title: $$(this).find('title').text(),
-          content: $$(this).find('content').text(),
-          url: $$(this).find('url').text()
-        };
-      }).get();
-      var $input = $$(search_id)[0];
-      var $resultContent = $$(content_id)[0];
-      $input.addEventListener('input', function () {
-        var str = '<ul class="search-result-list">';
-        var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
-        $resultContent.innerHTML = '';
-        if (this.value.trim().length <= 0) {
-          return;
-        }
-        datas.forEach(function (data) {
-          var isMatch = true;
-          if (!data.title || data.title.trim() === '') {
-            data.title = 'Untitled';
-          }
-          var orig_data_title = data.title.trim();
-          var data_title = orig_data_title.toLowerCase();
-          var orig_data_content = data.content.trim().replace(/<[^>]+>/g, '');
-          var data_content = orig_data_content.toLowerCase();
-          var data_url = data.url;
-          var index_title = -1;
-          var index_content = -1;
-          var first_occur = -1;
-          if (data_content !== '') {
-            keywords.forEach(function (keyword, i) {
-              index_title = data_title.indexOf(keyword);
-              index_content = data_content.indexOf(keyword);
-              if (index_title < 0 && index_content < 0) {
-                isMatch = false;
-              } else {
-                if (index_content < 0) {
-                  index_content = 0;
-                }
-                if (i == 0) {
-                  first_occur = index_content;
-                }
-              }
-            });
-          } else {
-            isMatch = false;
-          }
-          if (isMatch) {
-            str += '<li><a href="' + data_url + '" class="search-result-title" target="_blank">' + orig_data_title + '</a>';
-            var content = orig_data_content;
-            if (first_occur >= 0) {
-              var start = first_occur - 20;
-              var end = first_occur + 80;
-              if (start < 0) {
-                start = 0;
-              }
-              if (start == 0) {
-                end = 100;
-              }
-              if (end > content.length) {
-                end = content.length;
-              }
-              var match_content = content.substr(start, end);
-              keywords.forEach(function (keyword) {
-                var regS = new RegExp(keyword, 'gi');
-                match_content = match_content.replace(regS, '<em class="search-result-keyword">$&</em>');
-              });
-              str += '<p class="search-result-content">' + match_content + '...</p>';
-            }
-            str += '</li>';
-          }
-        });
-        str += '</ul>';
-        $resultContent.innerHTML = str;
-      });
-    }
-  });
-};
+/* Search with Web Worker*/
 $$(function () {
-  var ele = $$('#search .search-form-input')[0];
+  const $searchInput = document.querySelector('#search .search-form-input');
   $$('#search').on('opened.mdui.dialog', function (e) {
-    ele.focus();
+    $searchInput.focus();
   });
   $$(document).on('click', function (e) {
     if ($$(e.target).closest('#search').length <= 0) {
@@ -205,8 +120,115 @@ $$(function () {
       $$('.search-result').html('');
     }
   });
-  var resource = $$('.search-result').attr('data-resource');
-  if (resource) searchFunc(resource, '.search-form-input', '.search-result');
+  if (window.Worker) {
+    const search_ww = new Worker("/js/search_ww.js");
+    search_ww.onmessage = function (e) {
+      // search result returned
+      // render
+      const matchedPosts = e.data;
+      const $resultContainer = document.querySelector('.search-result');
+      $resultContainer.innerHTML = "";
+      const $list = document.createElement('ul');
+      $list.classList.add('search-result-list');
+      // render datalist with matched posts
+      if (matchedPosts && matchedPosts.length) {
+        matchedPosts.forEach(function (_, i) {
+          const $opt = document.createElement("li");
+          const $a = document.createElement('a');
+          $a.classList.add('search-result-title');
+          $a.href = _.url;
+          $a.innerText = _.title;
+          $opt.appendChild($a);
+          const $p = document.createElement('p');
+          $p.classList.add('search-result-content');
+          const inputValue = $searchInput.value.trim();
+          let html = _.content.trim().replace(/\n/ig, " ").substring(0, 256);
+          if (inputValue && inputValue.length) {
+            const re = new RegExp(inputValue, 'gi');
+            html = html.replace(re, '<em class="search-result-keyword">$&</em>');
+          }
+          $p.innerHTML = html
+          $opt.appendChild($p);
+          if (i === 0) {
+            // highlight the first matched post by default
+            $opt.classList.add("active");
+          }
+          $list.appendChild($opt);
+        });
+        $resultContainer.appendChild($list);
+      } else {
+        $resultContainer.innerHTML =
+          "<p>NO post(s) that matched with your input can be found, please try other keywords.</p>";
+      }
+    };
+    // user typed the search term, delegate to the search web worker
+    $searchInput.addEventListener('keyup', function (evt) {
+      const options = Array.from(document.querySelectorAll('.search-result-list>li'));
+      let activeOptIdx = -1;
+      options.some((_, i) => {
+        if (_.classList.contains("active")) {
+          activeOptIdx = i;
+        }
+      });
+      const keyCode = evt.key;
+      if (keyCode === "Enter") {
+        // enter button was pressed
+        // redirect to the highlight matched post
+        const theOpt = options[activeOptIdx].querySelector('a');
+        if (theOpt) {
+          window.location.href = theOpt.href;
+        }
+      } else if (keyCode === "ArrowUp" || keyCode === "ArrowDown") {
+        if (!(options && options.length && activeOptIdx !== -1)) {
+          return; // no matched posts found
+        }
+        if (keyCode === "ArrowUp") {
+          // up arrow button was pressed
+          activeOptIdx--;
+          if (activeOptIdx < 0) {
+            activeOptIdx = options.length - 1;
+          }
+        } else {
+          // down arrow button was pressed
+          activeOptIdx = (activeOptIdx + 1) % options.length;
+        }
+        // highlight selected post by set class 'active'
+        options.forEach((_, i) => {
+          if (activeOptIdx === i) {
+            _.classList.add("active");
+          } else {
+            _.classList.remove("active");
+          }
+        });
+        document.querySelector('.search-result').scrollTo({
+          // height of search input is 50
+          top: options[activeOptIdx].offsetTop - 64,
+          behavior: "smooth"
+        });
+      } else {
+        // user is typing search term
+        // TODO: debounce (actually no need to debounce since the performance is quite good)
+        search_ww.postMessage({
+          action: "SEARCH",
+          data: $searchInput.value
+        });
+      }
+    });
+    setTimeout(function () {
+      // initial search web worker with delay
+      if (document.getElementById("search-index-file")) {
+        const indexFilePath = document.getElementById("search-index-file")
+          .value;
+        search_ww.postMessage({ action: "INIT", data: indexFilePath });
+      }
+      // shortcut for showing search form
+      document.body.addEventListener("keyup", evt => {
+        if (["E", "e"].includes(evt.key)) {
+          new mdui.Dialog('#search').open();
+        }
+      });
+    }, 2048);
+  }
 });
 
 /* Pace */
@@ -364,7 +386,7 @@ $$(function () {
   };
 
   Evented = (function () {
-    function Evented() {}
+    function Evented() { }
 
     Evented.prototype.on = function (event, handler, ctx, once) {
       var _base;
@@ -663,7 +685,7 @@ $$(function () {
       };
       try {
         extendNative(window.XMLHttpRequest, _XMLHttpRequest);
-      } catch (_error) {}
+      } catch (_error) { }
       if (_XDomainRequest != null) {
         window.XDomainRequest = function () {
           var req;
@@ -673,7 +695,7 @@ $$(function () {
         };
         try {
           extendNative(window.XDomainRequest, _XDomainRequest);
-        } catch (_error) {}
+        } catch (_error) { }
       }
       if ((_WebSocket != null) && options.ajax.trackWebSockets) {
         window.WebSocket = function (url, protocols) {
@@ -695,7 +717,7 @@ $$(function () {
         };
         try {
           extendNative(window.WebSocket, _WebSocket);
-        } catch (_error) {}
+        } catch (_error) { }
       }
     }
 
@@ -1154,3 +1176,86 @@ $$(function () {
   }
 
 }).call(this);
+
+/** enable clipboard for copy */
+$$(function () {
+  if (navigator.clipboard) {
+    const className_shining = "shining";
+    const animationDuration = 4096; // animation-duration: 4.096s;
+    const iconfont_check = 'check';
+    const iconfont_copy = 'content_copy';
+    // process for .btn-copy
+    const $btns = document.querySelectorAll('.btn-copy');
+    if ($btns && $btns.length) {
+      Array.from($btns).forEach(function ($btn) {
+        $btn.addEventListener('click', function () {
+          const content = $btn.dataset.content;
+          if (content && content.length) {
+            navigator.clipboard.writeText(content).then(function () {
+              // add the class to trigger the animation
+              $btn.classList.add(className_shining);
+              // switch icon if success copy
+              setTimeout(function () {
+                $btn.innerHTML = iconfont_check;
+              }, animationDuration / 10);
+              setTimeout(function () {
+                $btn.innerHTML = iconfont_copy;
+              }, animationDuration / 10 * 9);
+              // revert class
+              setTimeout(function () {
+                $btn.classList.remove(className_shining);
+              }, animationDuration);
+            });
+          } else {
+            console.info('NOTHING copied!');
+          }
+        });
+      });
+    }
+    // process for source code blocks
+    const copySourceCode = function () {
+      const $elem = window.event.currentTarget;
+      const sourceCode = $elem.parentElement.querySelector(".code").innerText;
+      navigator.clipboard.writeText(sourceCode).then(function () {
+        const $msg = $elem.querySelector("span");
+        // add the class to trigger the animation
+        $msg.classList.add(className_shining);
+        // https://css-tricks.com/restart-css-animation/
+        void $msg.offsetWidth; // trigger reflow!!!
+        // swap the innerText during the animation
+        setTimeout(function () {
+          $msg.innerText = $msg.dataset.afterMsg;
+        }, animationDuration / 10);
+        setTimeout(function () {
+          $msg.innerText = $msg.dataset.beforeMsg;
+        }, animationDuration / 10 * 9);
+        // revert class
+        setTimeout(function () {
+          $msg.classList.remove(className_shining);
+        }, animationDuration);
+      });
+    };
+    Array.from(
+      document.querySelectorAll("#main article figure.highlight")
+    ).forEach(function ($fig) {
+      const $fa = document.createElement("i");
+      $fa.classList.add("mdui-icon");
+      $fa.classList.add("material-icons");
+      $fa.classList.add("btn-copy");
+      $fa.innerText = 'content_copy';
+      const beforeMsg = `👈 tap to copy the code snippet`;
+      const afterMsg = `✅`; // '✔️';
+      const $msg = document.createElement("span");
+      $msg.classList.add("msg");
+      $msg.innerText = beforeMsg;
+      $msg.dataset.beforeMsg = beforeMsg;
+      $msg.dataset.afterMsg = afterMsg;
+      const $row = document.createElement("div");
+      $row.classList.add("source-clipboard");
+      $row.appendChild($fa);
+      $row.appendChild($msg);
+      $row.addEventListener("click", copySourceCode);
+      $fig.appendChild($row);
+    });
+  }
+});

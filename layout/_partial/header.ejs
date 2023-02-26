@@ -4,6 +4,7 @@
     <a href="<%- url_for() %>" class="mdui-typo-headline"><%= config.title %></a>
     <div class="mdui-toolbar-spacer"></div>
     <a href="javascript:;" class="mdui-btn mdui-btn-icon" mdui-dialog="{target: '#search'}" mdui-tooltip="{content: '<%= __('search') %>'}"><i class="mdui-icon material-icons">search</i></a>
+    <input type="hidden" id="search-index-file" value="<%=config.root+config.search.path%>" />
     <% if (theme.rss) { %><a href="<%- url_for(theme.rss) %>" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '<%= __('rss_feed') %>'}"><i class="mdui-icon material-icons">rss_feed</i></a><% } %>
   </div>
 </header>
