@@ -110,18 +110,10 @@ $$(function () {
 
 /* Search with Web Worker*/
 $$(function () {
-  const $searchInput = document.querySelector('#search .search-form-input');
-  $$('#search').on('opened.mdui.dialog', function (e) {
-    $searchInput.focus();
-  });
-  $$(document).on('click', function (e) {
-    if ($$(e.target).closest('#search').length <= 0) {
-      $$('.search-form-input').val('');
-      $$('.search-result').html('');
-    }
-  });
   if (window.Worker) {
     const search_ww = new Worker("/js/search_ww.js");
+    const $searchInput = document.querySelector('#search .search-form-input');
+
     search_ww.onmessage = function (e) {
       // search result returned
       // render
@@ -157,8 +149,13 @@ $$(function () {
         });
         $resultContainer.appendChild($list);
       } else {
-        $resultContainer.innerHTML =
-          "<p>NO post(s) that matched with your input can be found, please try other keywords.</p>";
+        $resultContainer.innerHTML = [
+          '<ul class="search-result-list">',
+          '<li>',
+          '<p class="search-result-content">NO post(s) that matched with your input can be found, please try other keywords.</p>',
+          '</li>',
+          '</ul>'
+        ].join('');
       }
     };
     // user typed the search term, delegate to the search web worker
@@ -214,6 +211,20 @@ $$(function () {
         });
       }
     });
+    $$('#search').on('opened.mdui.dialog', function (e) {
+      $searchInput.focus();
+      $searchInput.value = '';
+      search_ww.postMessage({
+        action: "SEARCH",
+        data: $searchInput.value
+      });
+    });
+    $$(document).on('click', function (e) {
+      if ($$(e.target).closest('#search').length <= 0) {
+        $$('.search-form-input').val('');
+        $$('.search-result').html('');
+      }
+    });
     setTimeout(function () {
       // initial search web worker with delay
       if (document.getElementById("search-index-file")) {
@@ -227,7 +238,7 @@ $$(function () {
           new mdui.Dialog('#search').open();
         }
       });
-    }, 2048);
+    }, 4096);
   }
 });
 
@@ -1184,7 +1195,42 @@ $$(function () {
     const animationDuration = 4096; // animation-duration: 4.096s;
     const iconfont_check = 'check';
     const iconfont_copy = 'content_copy';
-    // process for .btn-copy
+
+    // append the copy icon to source code blocks
+    const copySourceCode = function () {
+      const $elem = window.event.currentTarget;
+      const sourceCode = $elem.parentElement.querySelector(".code").innerText;
+      navigator.clipboard.writeText(sourceCode).then(function () {
+        // add the class to trigger the animation
+        $elem.classList.add(className_shining);
+        // https://css-tricks.com/restart-css-animation/
+        void $elem.offsetWidth; // trigger reflow!!!
+        // swap the innerText during the animation
+        setTimeout(function () {
+          $elem.innerText = iconfont_check;
+        }, animationDuration / 10);
+        setTimeout(function () {
+          $elem.innerText = iconfont_copy;
+        }, animationDuration / 10 * 9);
+        // revert class
+        setTimeout(function () {
+          $elem.classList.remove(className_shining);
+        }, animationDuration);
+      });
+    };
+    Array.from(
+      document.querySelectorAll("#main article figure.highlight")
+    ).forEach(function ($fig) {
+      const $fa = document.createElement("i");
+      $fa.classList.add("mdui-icon");
+      $fa.classList.add("material-icons");
+      $fa.classList.add("btn-copy");
+      $fa.innerText = iconfont_copy;
+      $fa.addEventListener("click", copySourceCode);
+      $fig.appendChild($fa);
+    });
+
+    // process for .btn-copy with data-content property (e.g.: reference of current article)
     const $btns = document.querySelectorAll('.btn-copy');
     if ($btns && $btns.length) {
       Array.from($btns).forEach(function ($btn) {
@@ -1212,50 +1258,5 @@ $$(function () {
         });
       });
     }
-    // process for source code blocks
-    const copySourceCode = function () {
-      const $elem = window.event.currentTarget;
-      const sourceCode = $elem.parentElement.querySelector(".code").innerText;
-      navigator.clipboard.writeText(sourceCode).then(function () {
-        const $msg = $elem.querySelector("span");
-        // add the class to trigger the animation
-        $msg.classList.add(className_shining);
-        // https://css-tricks.com/restart-css-animation/
-        void $msg.offsetWidth; // trigger reflow!!!
-        // swap the innerText during the animation
-        setTimeout(function () {
-          $msg.innerText = $msg.dataset.afterMsg;
-        }, animationDuration / 10);
-        setTimeout(function () {
-          $msg.innerText = $msg.dataset.beforeMsg;
-        }, animationDuration / 10 * 9);
-        // revert class
-        setTimeout(function () {
-          $msg.classList.remove(className_shining);
-        }, animationDuration);
-      });
-    };
-    Array.from(
-      document.querySelectorAll("#main article figure.highlight")
-    ).forEach(function ($fig) {
-      const $fa = document.createElement("i");
-      $fa.classList.add("mdui-icon");
-      $fa.classList.add("material-icons");
-      $fa.classList.add("btn-copy");
-      $fa.innerText = 'content_copy';
-      const beforeMsg = `👈 tap to copy the code snippet`;
-      const afterMsg = `✅`; // '✔️';
-      const $msg = document.createElement("span");
-      $msg.classList.add("msg");
-      $msg.innerText = beforeMsg;
-      $msg.dataset.beforeMsg = beforeMsg;
-      $msg.dataset.afterMsg = afterMsg;
-      const $row = document.createElement("div");
-      $row.classList.add("source-clipboard");
-      $row.appendChild($fa);
-      $row.appendChild($msg);
-      $row.addEventListener("click", copySourceCode);
-      $fig.appendChild($row);
-    });
   }
 });

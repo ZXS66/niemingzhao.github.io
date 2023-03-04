@@ -22,16 +22,17 @@ onmessage = async e => {
       case "QUERY":
       default:
         // perform search with user input keyword
-        let value = (data || "").toLowerCase();
-        if (value.length === 0) {
-          return;
-        }
+        const value = (data || "").toLowerCase();
         // TODO: implement advanced search algorithm
         // reference: https://stackoverflow.com/questions/5859561/getting-the-closest-string-match
         // searchStore is sorted by time
         const matchedPosts = [];
         const maxContentLength = 256;
         const maxPostAmount = 10;
+        if (value.length === 0) {
+          postMessage(searchStore.slice(0, maxPostAmount));
+          return;
+        }
         // matched with title
         searchStore.forEach(_ => {
           if (matchedPosts.length >= maxPostAmount) return; // maximum
