@@ -1198,36 +1198,54 @@ $$(function () {
 
     // append the copy icon to source code blocks
     const copySourceCode = function () {
-      const $elem = window.event.currentTarget;
-      const sourceCode = $elem.parentElement.querySelector(".code").innerText;
+      const $cpBtn = window.event.currentTarget;
+      const sourceCode = $cpBtn.parentElement.nextSibling.querySelector(".code").innerText;
       navigator.clipboard.writeText(sourceCode).then(function () {
+        const $icon = $cpBtn.querySelector('.mdui-icon');
         // add the class to trigger the animation
-        $elem.classList.add(className_shining);
+        $icon.classList.add(className_shining);
         // https://css-tricks.com/restart-css-animation/
-        void $elem.offsetWidth; // trigger reflow!!!
+        void $icon.offsetWidth; // trigger reflow!!!
         // swap the innerText during the animation
         setTimeout(function () {
-          $elem.innerText = iconfont_check;
+          $icon.innerText = iconfont_check;
         }, animationDuration / 10);
         setTimeout(function () {
-          $elem.innerText = iconfont_copy;
+          $icon.innerText = iconfont_copy;
         }, animationDuration / 10 * 9);
         // revert class
         setTimeout(function () {
-          $elem.classList.remove(className_shining);
+          $icon.classList.remove(className_shining);
         }, animationDuration);
       });
     };
+    const NO_ACTION = 'javascript:;';
     Array.from(
       document.querySelectorAll("#main article figure.highlight")
     ).forEach(function ($fig) {
+      const $div = document.createElement('div');
+      $div.classList.add('highlight-caption');
+      $div.classList.add('mdui-toolbar');
+      $div.classList.add('mdui-text-color-theme-icon');
+      const $language = document.createElement('div');
+      $language.classList.add('language');
+      $language.classList.add('mdui-toolbar-spacer');
+      $language.innerText = $fig.className.replace('highlight', '').trim();
+      $div.appendChild($language);
+      const $cpBtn = document.createElement('a');
+      $cpBtn.classList.add('mdui-btn');
+      $cpBtn.classList.add('mdui-btn-icon');
+      $cpBtn.setAttribute('href', NO_ACTION);
       const $fa = document.createElement("i");
       $fa.classList.add("mdui-icon");
       $fa.classList.add("material-icons");
       $fa.classList.add("btn-copy");
       $fa.innerText = iconfont_copy;
-      $fa.addEventListener("click", copySourceCode);
-      $fig.appendChild($fa);
+      $cpBtn.appendChild($fa);
+      $cpBtn.addEventListener("click", copySourceCode);
+      // $cpBtn.appendChild(document.createTextNode('Copy'));
+      $div.appendChild($cpBtn);
+      $fig.parentNode.insertBefore($div, $fig);
     });
 
     // process for .btn-copy with data-content property (e.g.: reference of current article)
@@ -1253,7 +1271,8 @@ $$(function () {
               }, animationDuration);
             });
           } else {
-            console.info('NOTHING copied!');
+            // data-content is not specified.
+            // console.info('NOTHING copied!');
           }
         });
       });
