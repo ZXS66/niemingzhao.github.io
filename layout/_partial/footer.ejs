@@ -34,11 +34,11 @@
       <a href="<%- theme.sns.qq %>" target="_blank" class="mdui-btn mdui-btn-icon mdui-text-color-theme-a100"><i class="mdui-icon iconfont">&#xe651;</i></a>
     <% } %>
     <% if (theme.sns.wechat) { %>
-      <a href="<%- theme.sns.wechat %>" target="_blank" class="mdui-btn mdui-btn-icon mdui-text-color-theme-a100"><i class="mdui-icon iconfont">&#xe6e1;</i></a>
+      <a href="<%- url_for(theme.sns.wechat) %>" target="_blank" class="mdui-btn mdui-btn-icon mdui-text-color-theme-a100"><i class="mdui-icon iconfont">&#xe6e1;</i></a>
     <% } %>
   </div>
   <div class="mdui-p-y-1 mdui-text-center">
-    Copyright &copy; <% if (theme.since) { %><%= theme.since %> - <% } %><%- date(new Date(), 'YYYY') %> <%= config.author || config.title %><br>
-    Powered by <a href="https://hexo.io/" target="_blank" class="mdui-text-color-theme-accent">Hexo</a><% if (theme.footer_text) { %><%- theme.footer_text %><% } %>
+    &copy; <% if (theme.since) { %><%= theme.since %> - <% } %><%- date(new Date(), 'YYYY') %> Copyright <%= config.author || config.title %>, powered by <a href="https://hexo.io/" target="_blank" class="mdui-text-color-theme-accent">Hexo</a><% if (theme.footer_text) { %><%- theme.footer_text %><% } %><br/>
+    <a href="https://beian.miit.gov.cn" target="_blank" class="mdui-text-color-theme-text">沪ICP备2024050501号-1</a>
   </div>
 </footer>

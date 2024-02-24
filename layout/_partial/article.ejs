@@ -57,7 +57,7 @@
   <style>#main article .mdui-card-content .text-center{text-align:center!important}</style>
   <article class="mdui-card mdui-m-b-5">
     <header class="mdui-card-media">
-      <img src="<%- page.thumbnail || '/images/random/material-' + (Math.round(Math.random() * 18) + 1) + '.png' %>" style="max-height: 240px;">
+      <img src="<%- page.thumbnail || url_for('/images/random/material-' + (Math.round(Math.random()*18)+1) + '.png') %>" style="max-height: 240px;">
       <div class="mdui-card-media-covered">
         <div class="mdui-card-primary">
           <div class="mdui-card-primary-title"><%= page.title %></div>
@@ -92,7 +92,7 @@
               <a href="https://telegram.me/share/url?url=<%- page.permalink %>&text=<%= page.title %>" target="_blank" class="mdui-ripple"><%= __('share.telegram') %></a>
             </li>
             <li class="mdui-menu-item">
-              <a href="/static/qrcode.html?data=<%- page.permalink %>" target="_blank" class="mdui-ripple"><%= __('share.qrcode') %></a>
+              <a href="<%- url_for('/static/qrcode.html?data='+page.permalink) %>" target="_blank" class="mdui-ripple"><%= __('share.qrcode') %></a>
             </li>
           </ul>
         <% } %>

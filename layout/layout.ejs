@@ -10,7 +10,7 @@
   <main id="main" class="mdui-m-t-5 fadeIn animated"><%- body %></main>
   <%- partial('_partial/footer', null, {cache: !config.relative_link}) %>
   <button id="gotop" class="mdui-fab mdui-fab-fixed mdui-fab-hide mdui-color-theme-accent mdui-ripple"><i class="mdui-icon material-icons">arrow_upward</i></button>
+  <input type="hidden" id="theme-base-URL" value="<%- url_for('/') %>"/>
   <%- js(['js/mdui', 'js/script']) %>
-  <%- js('custom') %>
 </body>
 </html>

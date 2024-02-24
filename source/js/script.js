@@ -111,7 +111,11 @@ $$(function () {
 /* Search with Web Worker*/
 $$(function () {
   if (window.Worker) {
-    const search_ww = new Worker("/js/search_ww.js");
+    const scriptUrl = new URL(
+      "js/search_ww.js",
+      `${window.location.protocol}//${window.location.host}${document.getElementById("theme-base-URL").value}`
+    );
+    const search_ww = new Worker(scriptUrl.href);
     const $searchInput = document.querySelector('#search .search-form-input');
 
     search_ww.onmessage = function (e) {

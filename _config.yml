@@ -7,7 +7,7 @@ notice:
 favicon: /images/favicon.ico
 banner: /images/Whitebeard's_silhouette.png
 avatar: /images/avator.png
-rss: /atom.xml
+# rss: /atom.xml
 
 email: zh_cn2008@hotmail.com
 sns:
@@ -86,4 +86,4 @@ comment:
   changyan_app_key:
   changyan_sid_type:
 
-app: /app
+app: /../ng
